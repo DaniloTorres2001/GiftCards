@@ -7,6 +7,11 @@
     "start": "node index.js",
     "test": "jest"
   },
+  "jest": {
+    "setupFiles": [
+      "../giftpoint-api/jest.setup.js"
+    ]
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
