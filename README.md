@@ -1,4 +1,4 @@
-# 🎁 GiftPoint API
+# 🎁 GiftCard API
 
 Una API RESTful para gestionar gift cards personales, desarrollada con Express y SQLite. Incluye autenticación, operaciones CRUD y transferencia de saldo entre tarjetas.
 
