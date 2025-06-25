@@ -27,8 +27,12 @@ db.serialize(() => {
     )`);
 });
 
+// Database operations
+
+// User operations
 const getUserByEmail = (email) => {
     return new Promise((resolve, reject) => {
+        // Validate input
         db.get("SELECT * FROM users WHERE email = ?",
             [email], (err, row) => {
                 if (err) {
@@ -40,9 +44,10 @@ const getUserByEmail = (email) => {
             });
     });
 }
-
+// Create a new user
 const createUser = (email, password) => {
     return new Promise((resolve, reject) => {
+        // Validate input
         db.run("INSERT INTO users (email, password) VALUES (?, ?)",
             [email, password], function (err) {
                 if (err) {
@@ -54,9 +59,12 @@ const createUser = (email, password) => {
             });
     });
 }
+// Gift card operations
 
+// Get all gift cards for a user
 const getGiftCardsByUser = (userId) => {
     return new Promise((resolve, reject) => {
+        // Ensure the user exists before attempting to fetch gift cards
         db.all("SELECT * FROM giftcards WHERE userId = ?",
             [userId], (err, rows) => {
                 if (err) {
@@ -69,8 +77,10 @@ const getGiftCardsByUser = (userId) => {
     });
 }
 
+// Get a gift card by ID
 const getGiftCardById = (id) => {
     return new Promise((resolve, reject) => {
+        // Ensure the gift card exists before attempting to fetch
         db.get("SELECT * FROM giftcards WHERE id = ?",
             [id], (err, row) => {
                 if (err) {
@@ -83,8 +93,10 @@ const getGiftCardById = (id) => {
     });
 }
 
+// Create a new gift card
 const createGiftCard = (userId, amount, currency, expirationDate) => {
     return new Promise((resolve, reject) => {
+        // Validate input
         db.run("INSERT INTO giftcards (userId, amount, currency, expirationDate) VALUES (?, ?, ?, ?)",
             [userId, amount, currency, expirationDate], function (err) {
                 if (err) {
@@ -97,8 +109,10 @@ const createGiftCard = (userId, amount, currency, expirationDate) => {
     });
 }
 
+// Update an existing gift card
 const updateGiftCard = (id, balance, expirationDate) => {
     return new Promise((resolve, reject) => {
+        // Ensure the gift card exists before attempting to update
         db.run("UPDATE giftcards SET amount = ?, expirationDate = ? WHERE id = ?",
             [balance, expirationDate, id], function (err) {
                 if (err) {
@@ -111,8 +125,10 @@ const updateGiftCard = (id, balance, expirationDate) => {
     });
 }
 
+// Delete a gift card
 const deleteGiftCard = (id) => {
     return new Promise((resolve, reject) => {
+        // Ensure the gift card exists before attempting to delete
         db.run("DELETE FROM giftcards WHERE id = ?",
             [id], function (err) {
                 if (err) {
@@ -125,12 +141,15 @@ const deleteGiftCard = (id) => {
     });
 }
 
+// Transfer balance between gift cards
 const transferBalance = async (userId, sourceId, destId, amount) => {
     if (amount <= 0) throw new Error("Amount must be greater than zero");
 
+    // Validate source and destination gift cards
     const source = await getGiftCardById(sourceId);
     const dest = await getGiftCardById(destId);
 
+    // Debugging output
     console.log("🔎 SOURCE:", source);
     console.log("🔎 DEST:", dest);
 
@@ -142,11 +161,13 @@ const transferBalance = async (userId, sourceId, destId, amount) => {
 
     return new Promise((resolve, reject) => {
         db.serialize(() => {
+            // Update source gift card
             db.run("UPDATE giftcards SET amount = amount - ? WHERE id = ?", [amount, sourceId], (err) => {
                 if (err) {
                     console.error("Error updating source gift card:", err.message);
                     return reject(err);
                 }
+                // Update destination gift card
                 db.run("UPDATE giftcards SET amount = amount + ? WHERE id = ?", [amount, destId], (err) => {
                     if (err) {
                         console.error("Error updating destination gift card:", err.message);

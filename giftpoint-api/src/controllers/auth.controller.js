@@ -5,6 +5,7 @@ const db = require('../config/db');
 const register = async (req, res) => {
     const { email, password } = req.body;
 
+    // Validate input
     if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
     }
@@ -12,12 +13,14 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
     try {
+        // Check if user already exists
         const existingUser = await db.getUserByEmail(email);
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
+        // Hash the password before storing it in the database
         const hashedPassword = await bycrypt.hash(password, 10);
-
+        // Create a new user
         const user = await db.createUser(email, hashedPassword);
 
         res.status(201).json({
@@ -33,15 +36,18 @@ const register = async (req, res) => {
     }
 };
 
+// User login
 const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Validate input
         const user = await db.getUserByEmail(email);
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
+        // Compare the provided password with the stored hashed password
         const match = await bycrypt.compare(password, user.password);
         if (!match) {
             return res.status(400).json({ message: 'Invalid email or password' });

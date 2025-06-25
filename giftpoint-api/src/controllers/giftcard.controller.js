@@ -1,12 +1,14 @@
 const db = require("../config/db");
 const { isFutureDate } = require("../utils/validators");
 
+// Get all gift cards for the authenticated user
 const getAll = async (req, res) => {
     const userId = req.user.id;
     const giftCards = await db.getGiftCardsByUser(userId);
     res.json(giftCards);
 };
 
+// Create a new gift card
 const create = async (req, res) => {
     const userId = req.user.id;
     const { amount, currency, expirationDate } = req.body;
@@ -24,6 +26,7 @@ const create = async (req, res) => {
     }
 };
 
+// Get a gift card by ID for the authenticated user
 const getById = async (req, res) => {
     const giftCard = await db.getGiftCardById(req.params.id);
     if (!giftCard || giftCard.userId !== req.user.id) {
@@ -32,6 +35,7 @@ const getById = async (req, res) => {
     res.json(giftCard);
 };
 
+// Update a gift card
 const update = async (req, res) => {
     const { balance, expirationDate } = req.body;
     const giftCard = await db.getGiftCardById(req.params.id);
@@ -50,6 +54,7 @@ const update = async (req, res) => {
     }
 };
 
+// Delete a gift card
 const remove = async (req, res) => {
     const giftCard = await db.getGiftCardById(req.params.id);
 
@@ -66,43 +71,45 @@ const remove = async (req, res) => {
     }
 };
 
+// Transfer balance between gift cards
 const transfer = async (req, res) => {
     const { sourceCardId, destinationCardId, amount } = req.body;
     const userId = req.user.id;
 
-    // Validación de entrada básica
+    // Validate input
     if (!sourceCardId || !destinationCardId || typeof amount !== 'number') {
-        return res.status(400).json({ error: 'Parámetros requeridos: sourceCardId, destinationCardId y amount numérico' });
+        return res.status(400).json({ error: 'Required Parameters: sourceCardId, destinationCardId y amount numérico' });
     }
 
     try {
+        // Fetch source and destination gift cards
         const source = await db.getGiftCardById(sourceCardId);
         const dest = await db.getGiftCardById(destinationCardId);
 
-        // Validación de existencia
+        // Validate existence
         if (!source || !dest) {
-            return res.status(404).json({ error: 'Una o ambas gift cards no existen' });
+            return res.status(404).json({ error: 'One or both gift cards do not exist' });
         }
 
-        // Validación de propiedad
+        // Validate ownership
         if (source.userId !== userId || dest.userId !== userId) {
-            return res.status(403).json({ error: 'No tienes permiso sobre una de las gift cards' });
+            return res.status(403).json({ error: 'You do not have permission over one of the gift cards' });
         }
 
-        // Validación de monto
+        // Validate amount
         if (amount <= 0) {
-            return res.status(400).json({ error: 'El monto debe ser mayor a cero' });
+            return res.status(400).json({ error: 'The amount must be greater than zero' });
         }
 
-        // Validación de saldo
+        // Validate balance
         if (source.amount < amount) {
-            return res.status(400).json({ error: 'Saldo insuficiente en la tarjeta de origen' });
+            return res.status(400).json({ error: 'Insufficient balance on the source card' });
         }
 
-        // Ejecución
+        // Execution
         const result = await db.transferBalance(userId, sourceCardId, destinationCardId, amount);
         res.status(200).json({
-            message: 'Transferencia exitosa',
+            message: 'Transfer successful',
             transfer: result
         });
 
