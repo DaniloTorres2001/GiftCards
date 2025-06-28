@@ -5,7 +5,10 @@ const { isFutureDate } = require("../utils/validators");
 const getAll = async (req, res) => {
     const userId = req.user.id;
     const giftCards = await db.getGiftCardsByUser(userId);
-    res.json(giftCards);
+    if (!giftCards || giftCards.length === 0) {
+        return res.status(404).json({ error: "No gift cards found for this user" });
+    }
+    return res.status(200).json({ items: giftCards });
 };
 
 // Create a new gift card

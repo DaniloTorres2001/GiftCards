@@ -10,13 +10,16 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'Email and password are required' });
     }
     if (password.length < 6) {
-        return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+        return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ message: 'Formato de correo electrónico no válido' });
     }
     try {
         // Check if user already exists
         const existingUser = await db.getUserByEmail(email);
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'El usuario ya existe' });
         }
         // Hash the password before storing it in the database
         const hashedPassword = await bycrypt.hash(password, 10);
